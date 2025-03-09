@@ -3,11 +3,9 @@ from telegram import ReplyKeyboardMarkup, KeyboardButton,InlineKeyboardMarkup, I
 import sqlite3
 from Dictionaries import TEXTS  # Dictionaries.py faylidan matnlarni import qilamiz
 
-# TOKEN = "7421081783:AAFbWBYFlLabAXpQic6sKPiXImSjRwLckyo"
-# GROUP_CHAT_ID = -1002305462394
+TOKEN = "TOKEN"
+GROUP_CHAT_ID = ID
 
-TOKEN = "7740460720:AAF9M6o8s5EWTKacghTiNC1BEgLJluea0kM"
-GROUP_CHAT_ID = -1002317233482
 
 # Hujjatlarni vaqtincha saqlash uchun lug‘at
 user_documents = {}
@@ -218,16 +216,6 @@ def choose_language(update, context):
     return ASK_NAME
 
 
-# 📌 Hujjat jo‘natish
-# def send_document(update, context):
-#     update.message.reply_text("Hujjat jo'nating!")
-
-# def send_document(update, context):
-#     """Hujjat jo‘natish jarayonini boshlash"""
-#     user_id = update.message.from_user.id
-#     lang_id = context.user_data["language"]
-#     user_documents[user_id] = {"obektivka": None, "diplom": None, "certifikat": None}
-#     update.message.reply_text("📂 Iltimos, Obyektivka hujjatini jo‘nating (PDF, DOC, JPG, ZIP formatlarida).")
 
 def send_document(update, context):
     """Hujjat jo‘natish jarayonini boshlash"""
@@ -279,10 +267,6 @@ def handle_document(update, context):
         update.message.reply_text(TEXTS["ask_diplom"][lang_id])
     elif user_documents[user_id]["diplom"] is None:
         user_documents[user_id]["diplom"] = document
-        # keyboard = [
-        #     [InlineKeyboardButton("Ha", callback_data="cert_ha")],
-        #     [InlineKeyboardButton("Yo‘q", callback_data="cert_yoq")]
-        # ]
         keyboard = [
             [InlineKeyboardButton(TEXTS["yes"][lang_id], callback_data="cert_ha")],
             [InlineKeyboardButton(TEXTS["no"][lang_id], callback_data="cert_yoq")]
@@ -326,84 +310,6 @@ def certifikat_callback(update, context):
         send_to_group(update, context, user_id)
 
 
-# def send_to_group(update, context, user_id):
-#     """Guruhga hujjatlarni yuborish"""
-#     if user_id not in user_documents:
-#         return
-#
-#     user_info = update.message.from_user
-#     caption = f"👤 *Yangi hujjatlar!*\n👨‍💼 *Ism:* {user_info.full_name}\n🆔 *ID:* {user_info.id}"
-#
-#     # Guruhga hujjatlarni yuborish
-#     context.bot.send_message(chat_id=GROUP_CHAT_ID, text=caption, parse_mode="Markdown")
-#
-#     for key, doc in user_documents[user_id].items():
-#         if doc:
-#             if isinstance(doc, Document):  # Agar fayl bo'lsa
-#                 context.bot.send_document(chat_id=GROUP_CHAT_ID, document=doc.file_id,
-#                                           caption=f"📄 {key.capitalize()} hujjati")
-#             else:  # Agar rasm bo'lsa
-#                 context.bot.send_photo(chat_id=GROUP_CHAT_ID, photo=doc.file_id,
-#                                        caption=f"🖼 {key.capitalize()} hujjati")
-#
-#     update.message.reply_text("✅ Hujjatlaringiz muvaffaqiyatli jo‘natildi!")
-#
-#     # Foydalanuvchi hujjatlarini o‘chirish
-#     del user_documents[user_id]
-
-# def send_to_group(update, context, user_id):
-#     """Guruhga hujjatlarni foydalanuvchi profili bilan birga yuborish"""
-#
-#     # 📌 `context.user_data["language"]` mavjudligini tekshiramiz
-#     if "language" not in context.user_data:
-#         # 📌 Agar yo‘q bo‘lsa, bazadan olishga harakat qilamiz
-#         cursor.execute("SELECT language FROM users WHERE user_id=?", (user_id,))
-#         user_data = cursor.fetchone()
-#
-#         if user_data:
-#             context.user_data["language"] = int(user_data[0])  # Bazadan olinadi
-#         else:
-#             context.user_data["language"] = 2  # Agar yo‘q bo‘lsa, standart o‘zbek tili
-#
-#     lang_id = context.user_data["language"]  # Endi xatolik chiqmaydi
-#
-#
-#     if user_id not in user_documents:
-#         return
-#
-#     # 📌 Foydalanuvchi ma'lumotlarini bazadan olish
-#     cursor.execute("SELECT first_name, last_name, phone FROM users WHERE user_id=?", (user_id,))
-#     user_data = cursor.fetchone()
-#
-#     if user_data:
-#         first_name, last_name, phone = user_data
-#     else:
-#         first_name, last_name, phone = "Noma'lum", "Noma'lum", "Noma'lum"
-#
-#     # 📌 Profil ma'lumotlarini caption ga qo'shish
-#     caption = f"👤 *Yangi hujjatlar!*\n" \
-#               f"👨💼 *Ism:* {first_name} {last_name}\n" \
-#               f"📞 *Telefon:* {phone}"
-#               # f"🆔 *ID:* {user_id}"
-#
-#     # caption = TEXTS["send_to_group"][lang_id]
-#
-#     # 📌 Guruhga foydalanuvchi profil ma'lumotlarini yuborish
-#     context.bot.send_message(chat_id=GROUP_CHAT_ID, text=caption, parse_mode="Markdown")
-#
-#     # 📌 Hujjatlarni yuborish
-#     for key, doc in user_documents[user_id].items():
-#         if doc:
-#             if isinstance(doc, Document):  # Agar hujjat bo‘lsa
-#                 context.bot.send_document(chat_id=GROUP_CHAT_ID, document=doc.file_id, caption=f"📄 {key.capitalize()} hujjati")
-#             else:  # Agar rasm bo‘lsa
-#                 context.bot.send_photo(chat_id=GROUP_CHAT_ID, photo=doc.file_id, caption=f"🖼 {key.capitalize()} hujjati")
-#
-#     # update.message.reply_text("✅ Hujjatlaringiz muvaffaqiyatli jo‘natildi!")
-#     update.message.reply_text(TEXTS["completed"][lang_id])
-#
-#     # 📌 Foydalanuvchi hujjatlarini o‘chirish
-#     del user_documents[user_id]
 
 def send_to_group(update, context, user_id):
     """Guruhga hujjatlarni foydalanuvchi profili bilan birga yuborish"""
