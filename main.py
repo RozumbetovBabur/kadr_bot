@@ -1,10 +1,17 @@
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, ConversationHandler, CallbackQueryHandler, CallbackContext,CallbackContext
-from telegram import ReplyKeyboardMarkup, KeyboardButton,InlineKeyboardMarkup, InlineKeyboardButton,Document, PhotoSize, BotCommand
+from telegram import ReplyKeyboardMarkup, KeyboardButton,InlineKeyboardMarkup, InlineKeyboardButton,Document, PhotoSize, BotCommand,Bot
 import sqlite3
 from Dictionaries import TEXTS  # Dictionaries.py faylidan matnlarni import qilamiz
 
 TOKEN = "TOKEN"
 GROUP_CHAT_ID = ID
+
+bot = Bot(token=TOKEN)
+
+# Xabar matni
+SERVER_RESTART_MSG = ("🔄 Server qayta qo‘shildi! Botni ishlatish uchun /start buyrug‘ini bosing.\n"
+                      "🔄 Server qayta qosıldı! Botdi isletiw ushın /start buyrıǵın basıń.\n"
+                      "🔄 Сервер переподключен! Нажмите /start, чтобы запустить бота.")
 
 
 # Hujjatlarni vaqtincha saqlash uchun lug‘at
@@ -28,6 +35,37 @@ CREATE TABLE IF NOT EXISTS users (
 )
 """)
 conn.commit()
+
+
+def get_all_users():
+    """Bazadan barcha foydalanuvchilarni olish"""
+    conn = sqlite3.connect("users.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT user_id FROM users")
+    users = [row[0] for row in cursor.fetchall()]
+    conn.close()
+    return users
+
+def send_restart_message():
+    """Barcha foydalanuvchilarga server qayta ishga tushganini xabar qilish"""
+    users = get_all_users()
+    if not users:
+        print("⚠️ Hech qanday foydalanuvchi topilmadi!")
+        return
+
+    sent_users = set()  # Xabar yuborilgan foydalanuvchilarni saqlash
+
+    for user_id in users:
+        if user_id not in sent_users:  # Agar foydalanuvchiga oldin xabar yuborilmagan bo‘lsa
+            try:
+                bot.send_message(chat_id=user_id, text=SERVER_RESTART_MSG)
+                print(f"✅ {user_id} ga xabar yuborildi")
+                sent_users.add(user_id)  # Foydalanuvchini ro‘yxatga qo‘shish
+            except Exception as e:
+                print(f"❌ {user_id} ga xabar yuborishda xatolik: {e}")
+
+# Bot qayta ishga tushganda ushbu funksiya chaqiriladi
+send_restart_message()
 
 
 def set_bot_commands(bot):
@@ -420,4 +458,5 @@ def main():
     updater.idle()
 
 if __name__ == "__main__":
+    send_restart_message()  # Foydalanuvchilarga xabar yuborish
     main()
